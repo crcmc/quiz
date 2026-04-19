@@ -504,11 +504,6 @@
 
 <div class="petals" id="petals"></div>
 
-<!-- 상단 플로팅 곤충 추가 버튼 -->
-<button class="add-bug-btn" onclick="openModal()">
-  ➕ 곤충 관리
-</button>
-
 <div class="game-wrap">
 
   <div class="start-screen" id="startScreen">
@@ -542,69 +537,15 @@
   <div class="feedback-content" id="feedbackContent"></div>
 </div>
 
-<!-- 곤충 관리 모달 -->
-<div class="modal-overlay" id="modal">
-  <div class="modal">
-    <h2>🐛 곤충 관리</h2>
-    <div class="modal-tabs">
-      <button class="modal-tab active" onclick="switchTab('add')">➕ 곤충 추가</button>
-      <button class="modal-tab" onclick="switchTab('list')">📋 전체 목록</button>
-    </div>
-
-    <!-- 추가 탭 -->
-    <div class="tab-content active" id="tabAdd">
-      <div class="form-group">
-        <label>🏷️ 곤충 이름</label>
-        <input type="text" id="bugName" placeholder="예: 사슴벌레" maxlength="10">
-      </div>
-      <div class="form-group">
-        <label>📁 images 폴더에서 사진 선택</label>
-        <div class="file-input-wrap">
-          <input type="file" id="bugImage" accept="image/*" onchange="previewImage(event)">
-          <div id="fileInputText">🖼️ 클릭해서 images 폴더의 사진을 선택하세요</div>
-          <img class="preview-img" id="previewImg" alt="미리보기">
-        </div>
-      </div>
-      <div class="modal-actions">
-        <button class="modal-btn secondary" onclick="closeModal()">취소</button>
-        <button class="modal-btn primary" onclick="addBug()">추가하기 ✨</button>
-      </div>
-      <p style="font-size: 0.85rem; color: var(--text-light); margin-top: 15px; text-align: center; line-height: 1.5;">
-        💡 먼저 <code>images</code> 폴더에 사진을 넣어주세요!<br>
-        그런 다음 "파일 선택"에서 해당 사진을 고르면 퀴즈에 추가돼요.
-      </p>
-    </div>
-
-    <!-- 목록 탭 -->
-    <div class="tab-content" id="tabList">
-      <div class="bug-list" id="bugListContainer"></div>
-      <div class="modal-actions">
-        <button class="modal-btn primary" onclick="closeModal()">닫기</button>
-      </div>
-    </div>
-  </div>
-</div>
-
 <div class="toast" id="toast"></div>
 
 <script>
 // ============================================
-// 기본 곤충 정보
+// 곤충 정보 - bugs.json에서 로드
 // ============================================
-const DEFAULT_BUGS = {
-  bee:         { name: '꿀벌',     img: 'images/꿀벌.png',     emoji: '🐝' },
-  butterfly:   { name: '나비',     img: 'images/나비.png',     emoji: '🦋' },
-  ladybug:     { name: '무당벌레', img: 'images/무당벌레.png', emoji: '🐞' },
-  ant:         { name: '개미',     img: 'images/개미.png',     emoji: '🐜' },
-  dragonfly:   { name: '잠자리',   img: 'images/잠자리.png',   emoji: '🪰' },
-  snail:       { name: '달팽이',   img: 'images/달팽이.png',   emoji: '🐌' },
-  caterpillar: { name: '애벌레',   img: 'images/애벌레.png',   emoji: '🐛' },
-  spider:      { name: '거미',     img: 'images/거미.png',     emoji: '🕷️' },
-  cicada:      { name: '매미',     img: 'images/매미.png',     emoji: '🦗' },
-  grasshopper: { name: '메뚜기',   img: 'images/메뚜기.png',   emoji: '🦗' },
-};
+let ALL_BUGS = {}; // bugs.json에서 로드된 전체 곤충 데이터
 
-// 힌트와 설명 데이터
+// 힌트와 설명 데이터 (기본 10종)
 const BUG_HINTS = {
   bee:         { feature: '꽃에서 꿀을 모으는 친구예요.', hint: '노란색과 검은색 줄무늬가 있어요' },
   butterfly:   { feature: '알록달록 예쁜 날개로 꽃밭을 날아다녀요.', hint: '훨훨 나풀나풀' },
@@ -618,33 +559,44 @@ const BUG_HINTS = {
   grasshopper: { feature: '뒷다리로 폴짝폴짝 뛰어다녀요.', hint: '풀밭에서 볼 수 있어요' },
 };
 
-// ============================================
-// 로컬스토리지에서 커스텀 곤충 로드/저장
-// ============================================
-const STORAGE_KEY = 'customBugs_v1';
-
-function loadCustomBugs() {
+// bugs.json 로드
+async function loadBugs() {
   try {
-    const data = localStorage.getItem(STORAGE_KEY);
-    return data ? JSON.parse(data) : {};
+    // 캐시 방지를 위한 타임스탬프 추가
+    const res = await fetch('bugs.json?t=' + Date.now());
+    if (!res.ok) throw new Error('bugs.json 로드 실패');
+    const data = await res.json();
+    ALL_BUGS = {};
+    data.bugs.forEach(bug => {
+      ALL_BUGS[bug.key] = {
+        name: bug.name,
+        img: bug.img,
+        emoji: bug.emoji || '🐛'
+      };
+      // 커스텀 곤충이면 기본 힌트 생성
+      if (!BUG_HINTS[bug.key]) {
+        BUG_HINTS[bug.key] = {
+          feature: `${bug.name}은(는) 어떤 곤충일까요?`,
+          hint: bug.name + ' 친구예요'
+        };
+      }
+      // 사용자가 지정한 힌트가 있으면 덮어쓰기
+      if (bug.feature || bug.hint) {
+        BUG_HINTS[bug.key] = {
+          feature: bug.feature || BUG_HINTS[bug.key].feature,
+          hint: bug.hint || BUG_HINTS[bug.key].hint
+        };
+      }
+    });
+    updateBugCount();
   } catch (e) {
-    return {};
+    console.error('곤충 데이터 로드 실패:', e);
+    showToast('⚠️ 곤충 데이터를 불러올 수 없어요. 새로고침해 주세요.');
   }
 }
 
-function saveCustomBugs(bugs) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(bugs));
-  } catch (e) {
-    showToast('⚠️ 저장 실패: 용량 초과');
-  }
-}
-
-let customBugs = loadCustomBugs();
-
-// 전체 곤충 목록 (기본 + 커스텀 통합)
 function getAllBugs() {
-  return { ...DEFAULT_BUGS, ...customBugs };
+  return ALL_BUGS;
 }
 
 // ============================================
@@ -771,8 +723,8 @@ function speak(text, options = {}) {
   if (!cleanText) return;
   const utter = new SpeechSynthesisUtterance(cleanText);
   utter.lang = 'ko-KR';
-  utter.pitch = options.pitch || 1.7;
-  utter.rate = options.rate || 1.05;
+  utter.pitch = options.pitch || 1.0;
+  utter.rate = options.rate || 1.00;
   utter.volume = 1.0;
   window.speechSynthesis.speak(utter);
 }
@@ -786,7 +738,13 @@ function updateBugCount() {
 
 function startGame() {
   const allBugs = getAllBugs();
-  if (Object.keys(allBugs).length < 4) {
+  const bugCount = Object.keys(allBugs).length;
+  if (bugCount === 0) {
+    showToast('⚠️ 곤충 데이터를 아직 불러오는 중이에요. 잠시 후 다시 시도해 주세요.');
+    loadBugs();
+    return;
+  }
+  if (bugCount < 4) {
     showToast('⚠️ 최소 4종류의 곤충이 필요해요!');
     return;
   }
@@ -903,129 +861,13 @@ function restartGame() {
   document.getElementById('doneScreen').classList.remove('active');
   document.getElementById('doneScreen').style.display = 'none';
   document.getElementById('startScreen').style.display = 'block';
-  updateBugCount();
+  // 최신 곤충 목록 다시 불러오기 (다른 태블릿에서 추가된 곤충 반영)
+  loadBugs();
 }
 
 // ============================================
-// 곤충 관리 모달
+// 초기화
 // ============================================
-let pendingFileName = null;
-
-function openModal() {
-  document.getElementById('modal').classList.add('show');
-  renderBugList();
-}
-
-function closeModal() {
-  document.getElementById('modal').classList.remove('show');
-  document.getElementById('bugName').value = '';
-  document.getElementById('bugImage').value = '';
-  document.getElementById('previewImg').classList.remove('show');
-  document.getElementById('fileInputText').textContent = '🖼️ 클릭해서 images 폴더의 사진을 선택하세요';
-  pendingFileName = null;
-}
-
-function switchTab(tab) {
-  document.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-  event.target.classList.add('active');
-  document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
-  if (tab === 'list') renderBugList();
-}
-
-function previewImage(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-
-  // 파일명만 저장 (images/ 폴더의 파일을 참조)
-  pendingFileName = file.name;
-
-  // 미리보기용으로만 Data URL 사용
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    const preview = document.getElementById('previewImg');
-    preview.src = e.target.result;
-    preview.classList.add('show');
-    document.getElementById('fileInputText').textContent = `✅ ${file.name}`;
-  };
-  reader.readAsDataURL(file);
-}
-
-function addBug() {
-  const name = document.getElementById('bugName').value.trim();
-
-  if (!name) {
-    showToast('⚠️ 곤충 이름을 입력해주세요');
-    return;
-  }
-  if (!pendingFileName) {
-    showToast('⚠️ 사진을 선택해주세요');
-    return;
-  }
-
-  // 중복 검사
-  const allBugs = getAllBugs();
-  for (const key in allBugs) {
-    if (allBugs[key].name === name) {
-      showToast('⚠️ 같은 이름의 곤충이 이미 있어요');
-      return;
-    }
-  }
-
-  const key = 'custom_' + Date.now();
-
-  // 커스텀 곤충 저장: images/파일명 경로로 저장
-  customBugs[key] = {
-    name: name,
-    img: 'images/' + pendingFileName,
-    emoji: '🐛',
-    isCustom: true
-  };
-  saveCustomBugs(customBugs);
-
-  // 힌트 정보 기본값
-  BUG_HINTS[key] = {
-    feature: `${name}은(는) 어떤 곤충일까요?`,
-    hint: name + ' 친구예요'
-  };
-
-  showToast(`✨ '${name}'이(가) 추가되었어요!`);
-  updateBugCount();
-  closeModal();
-}
-
-function deleteBug(key) {
-  const bug = customBugs[key];
-  if (!bug) return;
-  if (confirm(`'${bug.name}'을(를) 삭제할까요?`)) {
-    delete customBugs[key];
-    saveCustomBugs(customBugs);
-    delete BUG_HINTS[key];
-    renderBugList();
-    updateBugCount();
-    showToast('🗑️ 삭제되었어요');
-  }
-}
-
-function renderBugList() {
-  const container = document.getElementById('bugListContainer');
-  const allBugs = getAllBugs();
-  let html = '';
-  for (const key in allBugs) {
-    const bug = allBugs[key];
-    const isCustom = bug.isCustom;
-    const imgSrc = bug.img.startsWith('data:') ? bug.img : encodeURI(bug.img);
-    html += `<div class="bug-list-item ${isCustom ? 'custom' : ''}">
-      ${isCustom ? '<span class="badge">내가 추가</span>' : ''}
-      <button class="delete-btn" onclick="deleteBug('${key}')" title="삭제">✕</button>
-      <img src="${imgSrc}" alt="${bug.name}"
-        onerror="this.onerror=null; this.outerHTML='<span class=\\'bug-emoji-fallback\\'>${bug.emoji || '🐛'}</span>';">
-      <div class="name">${bug.name}</div>
-    </div>`;
-  }
-  container.innerHTML = html;
-}
-
 function showToast(msg) {
   const toast = document.getElementById('toast');
   toast.textContent = msg;
@@ -1033,8 +875,8 @@ function showToast(msg) {
   setTimeout(() => toast.classList.remove('show'), 2500);
 }
 
-// 초기화
-updateBugCount();
+// 페이지 로드 시 곤충 데이터 불러오기
+loadBugs();
 </script>
 
 </body>

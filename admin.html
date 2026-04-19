@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>🔧 곤충 퀴즈 관리자 페이지</title>
+<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Jua&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #F5F7FA;
+    --card: #FFFFFF;
+    --primary: #5B7EE8;
+    --primary-dark: #4A6BC8;
+    --success: #4CAF50;
+    --danger: #E74C3C;
+    --warning: #F39C12;
+    --text: #2C3E50;
+    --text-light: #7F8C8D;
+    --border: #E1E8ED;
+    --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+  }
+
+  body {
+    font-family: 'Gaegu', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 20px;
+    line-height: 1.6;
+  }
+
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 30px;
+    padding: 30px 20px;
+    background: linear-gradient(135deg, #667EEA 0%, #764BA2 100%);
+    color: white;
+    border-radius: 20px;
+    box-shadow: var(--shadow-lg);
+  }
+  header h1 {
+    font-family: 'Jua', sans-serif;
+    font-size: 2rem;
+    margin-bottom: 8px;
+  }
+  header p {
+    opacity: 0.9;
+    font-size: 1.1rem;
+  }
+
+  .card {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 25px;
+    box-shadow: var(--shadow);
+    margin-bottom: 20px;
+  }
+  .card h2 {
+    font-family: 'Jua', sans-serif;
+    font-size: 1.4rem;
+    margin-bottom: 15px;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  /* 상태 카드 */
+  .status-badge {
+    display: inline-block;
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-size: 0.95rem;
+    font-weight: bold;
+  }
+  .status-connected { background: #E8F5E9; color: var(--success); }
+  .status-disconnected { background: #FFEBEE; color: var(--danger); }
+
+  /* 폼 */
+  .form-group {
+    margin-bottom: 18px;
+  }
+  .form-group label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 8px;
+    font-size: 1rem;
+    color: var(--text);
+  }
+  .form-group label .hint {
+    font-weight: normal;
+    font-size: 0.85rem;
+    color: var(--text-light);
+    margin-left: 8px;
+  }
+  .form-group input[type="text"],
+  .form-group input[type="password"] {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    font-family: 'Gaegu', sans-serif;
+    font-size: 1.05rem;
+    transition: border-color 0.2s;
+  }
+  .form-group input:focus {
+    outline: none;
+    border-color: var(--primary);
+  }
+
+  .file-drop {
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    padding: 25px;
+    text-align: center;
+    cursor: pointer;
+    background: #FAFBFC;
+    transition: all 0.2s;
+    position: relative;
+  }
+  .file-drop:hover { border-color: var(--primary); background: #F0F4FF; }
+  .file-drop input[type="file"] {
+    position: absolute; inset: 0; opacity: 0; cursor: pointer;
+  }
+  .file-drop .icon { font-size: 2.5rem; margin-bottom: 10px; }
+  .file-drop .preview {
+    max-width: 150px;
+    max-height: 150px;
+    margin: 10px auto 0;
+    border-radius: 10px;
+    display: none;
+  }
+  .file-drop .preview.show { display: block; }
+
+  /* 버튼 */
+  .btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 10px;
+    font-family: 'Jua', sans-serif;
+    font-size: 1.05rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .btn:hover { transform: translateY(-1px); }
+  .btn:active { transform: translateY(1px); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+  .btn-primary { background: var(--primary); color: white; }
+  .btn-primary:hover { background: var(--primary-dark); }
+  .btn-success { background: var(--success); color: white; }
+  .btn-danger { background: var(--danger); color: white; }
+  .btn-secondary { background: var(--border); color: var(--text); }
+  .btn-block { width: 100%; justify-content: center; }
+
+  /* 곤충 목록 */
+  .bug-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 12px;
+    margin-top: 10px;
+  }
+  .bug-item {
+    background: #FAFBFC;
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 8px;
+    text-align: center;
+    position: relative;
+  }
+  .bug-item img {
+    width: 70px; height: 70px;
+    object-fit: contain;
+  }
+  .bug-item .emoji-fallback {
+    font-size: 55px;
+    line-height: 1;
+    display: block;
+  }
+  .bug-item .name {
+    font-family: 'Jua', sans-serif;
+    font-size: 0.95rem;
+    margin-top: 5px;
+    color: var(--text);
+  }
+  .bug-item .delete {
+    position: absolute;
+    top: 5px; right: 5px;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: var(--danger);
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 0.8rem;
+    display: none;
+  }
+  .bug-item.custom .delete { display: block; }
+  .bug-item.custom { border-color: var(--primary); }
+  .bug-item .badge {
+    position: absolute;
+    top: 5px; left: 5px;
+    background: var(--primary);
+    color: white;
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    border-radius: 8px;
+    font-family: 'Jua', sans-serif;
+  }
+
+  /* 로그 */
+  .log {
+    background: #1E1E1E;
+    color: #D4D4D4;
+    border-radius: 10px;
+    padding: 15px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    max-height: 200px;
+    overflow-y: auto;
+    margin-top: 10px;
+  }
+  .log-entry { margin: 2px 0; }
+  .log-info { color: #9CDCFE; }
+  .log-success { color: #6A9955; }
+  .log-error { color: #F44747; }
+
+  /* 경고 박스 */
+  .warning-box {
+    background: #FFF3CD;
+    border: 1px solid #FFEAA7;
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 20px;
+    font-size: 0.95rem;
+  }
+  .info-box {
+    background: #E3F2FD;
+    border: 1px solid #90CAF9;
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 15px;
+    font-size: 0.95rem;
+  }
+
+  /* 토스트 */
+  .toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--text);
+    color: white;
+    padding: 14px 28px;
+    border-radius: 25px;
+    font-size: 1rem;
+    z-index: 1000;
+    display: none;
+    box-shadow: var(--shadow-lg);
+  }
+  .toast.show { display: block; animation: slideUp 0.3s; }
+  @keyframes slideUp {
+    from { opacity: 0; transform: translate(-50%, 20px); }
+    to { opacity: 1; transform: translate(-50%, 0); }
+  }
+
+  /* 탭 */
+  .tabs {
+    display: flex;
+    border-bottom: 2px solid var(--border);
+    margin-bottom: 20px;
+    gap: 5px;
+  }
+  .tab {
+    padding: 10px 20px;
+    background: none;
+    border: none;
+    font-family: 'Jua', sans-serif;
+    font-size: 1rem;
+    cursor: pointer;
+    color: var(--text-light);
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+  }
+  .tab.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+  }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  code {
+    background: #F0F2F5;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9em;
+  }
+
+  details {
+    background: #F9FAFB;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 15px;
+    margin-bottom: 15px;
+  }
+  details summary {
+    cursor: pointer;
+    font-weight: bold;
+    color: var(--primary);
+  }
+  details[open] summary { margin-bottom: 10px; }
+  details ol, details ul { margin-left: 20px; margin-top: 8px; }
+  details li { margin: 5px 0; }
+
+  .link {
+    color: var(--primary);
+    text-decoration: none;
+  }
+  .link:hover { text-decoration: underline; }
+
+  .spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <header>
+    <h1>🔧 곤충 퀴즈 관리자 페이지</h1>
+    <p>선생님 전용 · GitHub 저장소와 연동하여 곤충을 추가/삭제합니다</p>
+  </header>
+
+  <!-- GitHub 연결 설정 -->
+  <div class="card">
+    <h2>🔗 GitHub 연결 설정</h2>
+    <div id="statusDisplay">
+      <span class="status-badge status-disconnected">⚪ 연결 안됨</span>
+    </div>
+
+    <details style="margin-top: 15px;">
+      <summary>💡 GitHub 토큰 발급 방법 (처음 한 번만)</summary>
+      <ol>
+        <li><a class="link" href="https://github.com/settings/tokens?type=beta" target="_blank">GitHub Fine-grained Token 페이지</a>로 이동</li>
+        <li><strong>"Generate new token"</strong> 클릭</li>
+        <li>Token name: <code>quiz-admin</code> 입력</li>
+        <li>Expiration: <strong>"No expiration"</strong> 또는 원하는 기간 선택</li>
+        <li>Repository access: <strong>"Only select repositories"</strong> 선택 → <code>crcmc/quiz</code> 선택</li>
+        <li>Permissions → Repository permissions 섹션에서:
+          <ul>
+            <li><strong>Contents</strong>: <code>Read and write</code> 선택</li>
+          </ul>
+        </li>
+        <li>맨 아래 <strong>"Generate token"</strong> 클릭</li>
+        <li>표시된 토큰(<code>github_pat_...</code>)을 복사해서 아래에 붙여넣기</li>
+        <li>⚠️ 토큰은 한 번만 표시되니 안전한 곳에 백업해두세요!</li>
+      </ol>
+    </details>
+
+    <div class="form-group" style="margin-top: 15px;">
+      <label>📋 저장소 <span class="hint">사용자명/저장소명</span></label>
+      <input type="text" id="repoInput" placeholder="예: crcmc/quiz" value="crcmc/quiz">
+    </div>
+    <div class="form-group">
+      <label>🔑 GitHub 토큰 <span class="hint">(브라우저에만 저장되며 서버로 전송되지 않음)</span></label>
+      <input type="password" id="tokenInput" placeholder="github_pat_...">
+    </div>
+    <button class="btn btn-primary" onclick="connectGitHub()">
+      🔌 연결하고 곤충 목록 불러오기
+    </button>
+    <button class="btn btn-secondary" onclick="clearToken()" style="margin-left: 8px;">
+      🗑️ 저장된 토큰 삭제
+    </button>
+  </div>
+
+  <!-- 작업 탭 -->
+  <div class="card" id="workArea" style="display: none;">
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('add')">➕ 곤충 추가</button>
+      <button class="tab" onclick="switchTab('list')">📋 전체 목록 (<span id="bugCount">0</span>)</button>
+    </div>
+
+    <!-- 추가 탭 -->
+    <div class="tab-content active" id="tabAdd">
+      <div class="info-box">
+        💡 곤충을 추가하면 GitHub 저장소에 사진이 업로드되고 <code>bugs.json</code>이 자동으로 업데이트돼요.
+        반영까지 <strong>1~2분</strong> 정도 걸리고, 그 후 모든 태블릿에서 새로고침하면 보입니다.
+      </div>
+
+      <div class="form-group">
+        <label>🏷️ 곤충 이름 <span class="hint">(한글, 10자 이내)</span></label>
+        <input type="text" id="bugName" placeholder="예: 반딧불이" maxlength="10">
+      </div>
+
+      <div class="form-group">
+        <label>📝 특징 설명 <span class="hint">(선택) - '이 친구는 누구?' 퀴즈에 사용</span></label>
+        <input type="text" id="bugFeature" placeholder="예: 밤에 꽁무니에서 반짝반짝 빛이 나요." maxlength="50">
+      </div>
+
+      <div class="form-group">
+        <label>💡 힌트 <span class="hint">(선택)</span></label>
+        <input type="text" id="bugHint" placeholder="예: 여름 밤에 날아다녀요" maxlength="30">
+      </div>
+
+      <div class="form-group">
+        <label>📷 사진 <span class="hint">(누끼 된 PNG 추천, 2MB 이하)</span></label>
+        <div class="file-drop">
+          <input type="file" id="bugImage" accept="image/*" onchange="previewImage(event)">
+          <div class="icon">🖼️</div>
+          <div id="fileText">클릭하거나 파일을 드래그하세요</div>
+          <img class="preview" id="previewImg" alt="미리보기">
+        </div>
+      </div>
+
+      <button class="btn btn-success btn-block" id="uploadBtn" onclick="uploadBug()">
+        🚀 GitHub에 업로드
+      </button>
+
+      <div class="log" id="addLog" style="display: none;"></div>
+    </div>
+
+    <!-- 목록 탭 -->
+    <div class="tab-content" id="tabList">
+      <div class="info-box">
+        📌 <strong>기본 10종</strong>은 삭제할 수 없어요. <strong>내가 추가한 곤충</strong>만 삭제 가능합니다.
+      </div>
+      <button class="btn btn-secondary" onclick="loadBugs()" style="margin-bottom: 15px;">
+        🔄 목록 새로고침
+      </button>
+      <div class="bug-grid" id="bugGrid"></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================
+// 상태 관리
+// ============================================
+let githubToken = '';
+let githubRepo = ''; // "owner/repo"
+let currentBugs = []; // bugs.json의 현재 내용
+let bugsJsonSha = ''; // bugs.json의 현재 SHA (업데이트 시 필요)
+
+// 기본 곤충 키 목록 (삭제 방지용)
+const DEFAULT_BUG_KEYS = ['bee', 'butterfly', 'ladybug', 'ant', 'dragonfly', 'snail', 'caterpillar', 'spider', 'cicada', 'grasshopper'];
+
+// 저장된 토큰 불러오기
+function loadSavedToken() {
+  const savedToken = localStorage.getItem('github_token');
+  const savedRepo = localStorage.getItem('github_repo');
+  if (savedToken) document.getElementById('tokenInput').value = savedToken;
+  if (savedRepo) document.getElementById('repoInput').value = savedRepo;
+}
+
+function clearToken() {
+  if (!confirm('저장된 GitHub 토큰을 삭제할까요?')) return;
+  localStorage.removeItem('github_token');
+  localStorage.removeItem('github_repo');
+  document.getElementById('tokenInput').value = '';
+  showToast('🗑️ 토큰이 삭제되었어요');
+  document.getElementById('workArea').style.display = 'none';
+  updateStatus(false);
+}
+
+function updateStatus(connected) {
+  const el = document.getElementById('statusDisplay');
+  if (connected) {
+    el.innerHTML = `<span class="status-badge status-connected">✅ 연결됨 · ${githubRepo}</span>`;
+  } else {
+    el.innerHTML = `<span class="status-badge status-disconnected">⚪ 연결 안됨</span>`;
+  }
+}
+
+// ============================================
+// GitHub API 연결
+// ============================================
+async function connectGitHub() {
+  const token = document.getElementById('tokenInput').value.trim();
+  const repo = document.getElementById('repoInput').value.trim();
+
+  if (!token) return showToast('⚠️ GitHub 토큰을 입력해주세요');
+  if (!repo || !repo.includes('/')) return showToast('⚠️ 저장소를 올바르게 입력해주세요 (예: crcmc/quiz)');
+
+  githubToken = token;
+  githubRepo = repo;
+
+  showToast('🔌 GitHub에 연결 중...');
+
+  try {
+    // 저장소 접근 테스트
+    const res = await fetch(`https://api.github.com/repos/${repo}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!res.ok) {
+      if (res.status === 401) throw new Error('토큰이 잘못되었거나 만료되었어요');
+      if (res.status === 404) throw new Error('저장소를 찾을 수 없어요. 이름을 확인해 주세요');
+      throw new Error(`GitHub 연결 실패 (${res.status})`);
+    }
+
+    // 토큰 저장
+    localStorage.setItem('github_token', token);
+    localStorage.setItem('github_repo', repo);
+
+    updateStatus(true);
+    document.getElementById('workArea').style.display = 'block';
+    showToast('✅ GitHub 연결 성공!');
+
+    // 곤충 목록 불러오기
+    await loadBugs();
+  } catch (e) {
+    showToast('❌ ' + e.message);
+    updateStatus(false);
+  }
+}
+
+// ============================================
+// bugs.json 불러오기
+// ============================================
+async function loadBugs() {
+  if (!githubToken) return;
+  try {
+    const res = await fetch(`https://api.github.com/repos/${githubRepo}/contents/bugs.json`, {
+      headers: { 'Authorization': `Bearer ${githubToken}` }
+    });
+    if (!res.ok) throw new Error('bugs.json 파일을 찾을 수 없어요');
+    const data = await res.json();
+    bugsJsonSha = data.sha;
+    // Base64 디코딩 (UTF-8 안전하게 처리)
+    const content = decodeURIComponent(escape(atob(data.content.replace(/\n/g, ''))));
+    const parsed = JSON.parse(content);
+    currentBugs = parsed.bugs || [];
+
+    document.getElementById('bugCount').textContent = currentBugs.length;
+    renderBugList();
+  } catch (e) {
+    showToast('❌ ' + e.message);
+  }
+}
+
+// ============================================
+// 곤충 목록 렌더링
+// ============================================
+function renderBugList() {
+  const grid = document.getElementById('bugGrid');
+  const repoUrl = `https://raw.githubusercontent.com/${githubRepo}/main/`;
+  let html = '';
+  currentBugs.forEach(bug => {
+    const isDefault = DEFAULT_BUG_KEYS.includes(bug.key);
+    const imgSrc = encodeURI(repoUrl + bug.img);
+    html += `<div class="bug-item ${!isDefault ? 'custom' : ''}">
+      ${!isDefault ? '<span class="badge">추가됨</span>' : ''}
+      <button class="delete" onclick="deleteBug('${bug.key}')" title="삭제">✕</button>
+      <img src="${imgSrc}" alt="${bug.name}"
+        onerror="this.onerror=null; this.outerHTML='<span class=\\'emoji-fallback\\'>${bug.emoji || '🐛'}</span>';">
+      <div class="name">${bug.name}</div>
+    </div>`;
+  });
+  grid.innerHTML = html || '<p style="grid-column: 1/-1; text-align: center; color: var(--text-light); padding: 20px;">곤충이 없어요</p>';
+}
+
+// ============================================
+// 곤충 추가
+// ============================================
+let pendingFile = null;
+let pendingBase64 = null;
+
+function previewImage(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  if (file.size > 2 * 1024 * 1024) {
+    showToast('⚠️ 파일이 너무 커요 (2MB 이하 권장)');
+  }
+
+  pendingFile = file;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    pendingBase64 = e.target.result.split(',')[1]; // Base64 부분만
+    const preview = document.getElementById('previewImg');
+    preview.src = e.target.result;
+    preview.classList.add('show');
+    document.getElementById('fileText').textContent = `✅ ${file.name}`;
+  };
+  reader.readAsDataURL(file);
+}
+
+function logEntry(msg, type = 'info') {
+  const log = document.getElementById('addLog');
+  log.style.display = 'block';
+  const entry = document.createElement('div');
+  entry.className = `log-entry log-${type}`;
+  entry.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+  log.appendChild(entry);
+  log.scrollTop = log.scrollHeight;
+}
+
+async function uploadBug() {
+  const name = document.getElementById('bugName').value.trim();
+  const feature = document.getElementById('bugFeature').value.trim();
+  const hint = document.getElementById('bugHint').value.trim();
+
+  if (!name) return showToast('⚠️ 곤충 이름을 입력해주세요');
+  if (!pendingFile) return showToast('⚠️ 사진을 선택해주세요');
+
+  // 중복 검사
+  if (currentBugs.some(b => b.name === name)) {
+    return showToast('⚠️ 같은 이름의 곤충이 이미 있어요');
+  }
+
+  const btn = document.getElementById('uploadBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> 업로드 중...';
+  document.getElementById('addLog').innerHTML = '';
+
+  try {
+    // 1. 이미지를 GitHub에 업로드
+    logEntry('1/2 사진 업로드 중...', 'info');
+
+    // 파일명: 곤충이름.확장자 (한글 파일명 그대로 사용)
+    const ext = pendingFile.name.split('.').pop().toLowerCase();
+    const imgFileName = `${name}.${ext}`;
+    const imgPath = `images/${imgFileName}`;
+
+    // 기존 파일이 있는지 확인
+    let existingSha = null;
+    try {
+      const checkRes = await fetch(
+        `https://api.github.com/repos/${githubRepo}/contents/${encodeURI(imgPath)}`,
+        { headers: { 'Authorization': `Bearer ${githubToken}` } }
+      );
+      if (checkRes.ok) {
+        const existing = await checkRes.json();
+        existingSha = existing.sha;
+        logEntry('기존 사진을 덮어씁니다', 'info');
+      }
+    } catch (e) { /* 파일 없음, 정상 */ }
+
+    const uploadBody = {
+      message: `Add bug: ${name}`,
+      content: pendingBase64,
+      branch: 'main'
+    };
+    if (existingSha) uploadBody.sha = existingSha;
+
+    const uploadRes = await fetch(
+      `https://api.github.com/repos/${githubRepo}/contents/${encodeURI(imgPath)}`,
+      {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${githubToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(uploadBody)
+      }
+    );
+    if (!uploadRes.ok) {
+      const err = await uploadRes.json();
+      throw new Error('사진 업로드 실패: ' + (err.message || uploadRes.status));
+    }
+    logEntry('✅ 사진 업로드 완료', 'success');
+
+    // 2. bugs.json 업데이트
+    logEntry('2/2 곤충 목록 업데이트 중...', 'info');
+
+    const newBug = {
+      key: 'custom_' + Date.now(),
+      name: name,
+      img: imgPath,
+      emoji: '🐛'
+    };
+    if (feature) newBug.feature = feature;
+    if (hint) newBug.hint = hint;
+
+    const updatedBugs = [...currentBugs, newBug];
+    const newContent = JSON.stringify({ bugs: updatedBugs }, null, 2);
+    // UTF-8 Base64 인코딩
+    const newContentBase64 = btoa(unescape(encodeURIComponent(newContent)));
+
+    const jsonRes = await fetch(
+      `https://api.github.com/repos/${githubRepo}/contents/bugs.json`,
+      {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${githubToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          message: `Update bugs.json: add ${name}`,
+          content: newContentBase64,
+          sha: bugsJsonSha,
+          branch: 'main'
+        })
+      }
+    );
+    if (!jsonRes.ok) {
+      const err = await jsonRes.json();
+      throw new Error('목록 업데이트 실패: ' + (err.message || jsonRes.status));
+    }
+    const jsonResult = await jsonRes.json();
+    bugsJsonSha = jsonResult.content.sha;
+    currentBugs = updatedBugs;
+
+    logEntry('✅ 곤충 목록 업데이트 완료', 'success');
+    logEntry(`🎉 '${name}' 추가 성공! 1~2분 후 게임에서 확인 가능합니다.`, 'success');
+
+    showToast(`✅ '${name}' 추가 완료!`);
+
+    // 입력 필드 초기화
+    document.getElementById('bugName').value = '';
+    document.getElementById('bugFeature').value = '';
+    document.getElementById('bugHint').value = '';
+    document.getElementById('bugImage').value = '';
+    document.getElementById('previewImg').classList.remove('show');
+    document.getElementById('fileText').textContent = '클릭하거나 파일을 드래그하세요';
+    pendingFile = null;
+    pendingBase64 = null;
+
+    document.getElementById('bugCount').textContent = currentBugs.length;
+
+  } catch (e) {
+    logEntry('❌ ' + e.message, 'error');
+    showToast('❌ ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '🚀 GitHub에 업로드';
+  }
+}
+
+// ============================================
+// 곤충 삭제
+// ============================================
+async function deleteBug(key) {
+  if (DEFAULT_BUG_KEYS.includes(key)) {
+    return showToast('⚠️ 기본 곤충은 삭제할 수 없어요');
+  }
+
+  const bug = currentBugs.find(b => b.key === key);
+  if (!bug) return;
+
+  if (!confirm(`'${bug.name}'을(를) 삭제할까요?\n(사진 파일과 목록에서 모두 제거됩니다)`)) return;
+
+  try {
+    // 1. 이미지 파일 삭제
+    try {
+      const imgRes = await fetch(
+        `https://api.github.com/repos/${githubRepo}/contents/${encodeURI(bug.img)}`,
+        { headers: { 'Authorization': `Bearer ${githubToken}` } }
+      );
+      if (imgRes.ok) {
+        const imgData = await imgRes.json();
+        await fetch(
+          `https://api.github.com/repos/${githubRepo}/contents/${encodeURI(bug.img)}`,
+          {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${githubToken}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              message: `Delete bug image: ${bug.name}`,
+              sha: imgData.sha,
+              branch: 'main'
+            })
+          }
+        );
+      }
+    } catch (e) { /* 이미지가 이미 없어도 계속 진행 */ }
+
+    // 2. bugs.json 업데이트
+    const updatedBugs = currentBugs.filter(b => b.key !== key);
+    const newContent = JSON.stringify({ bugs: updatedBugs }, null, 2);
+    const newContentBase64 = btoa(unescape(encodeURIComponent(newContent)));
+
+    const jsonRes = await fetch(
+      `https://api.github.com/repos/${githubRepo}/contents/bugs.json`,
+      {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${githubToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          message: `Delete bug: ${bug.name}`,
+          content: newContentBase64,
+          sha: bugsJsonSha,
+          branch: 'main'
+        })
+      }
+    );
+    if (!jsonRes.ok) throw new Error('목록 업데이트 실패');
+    const jsonResult = await jsonRes.json();
+    bugsJsonSha = jsonResult.content.sha;
+    currentBugs = updatedBugs;
+
+    document.getElementById('bugCount').textContent = currentBugs.length;
+    renderBugList();
+    showToast(`🗑️ '${bug.name}' 삭제 완료`);
+  } catch (e) {
+    showToast('❌ ' + e.message);
+  }
+}
+
+// ============================================
+// 탭 전환
+// ============================================
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
+  if (tab === 'list') renderBugList();
+}
+
+// ============================================
+// 토스트
+// ============================================
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+// 페이지 로드 시
+loadSavedToken();
+</script>
+
+</body>
+</html>

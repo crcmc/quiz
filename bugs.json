@@ -1,0 +1,14 @@
+{
+  "bugs": [
+    { "key": "bee",         "name": "꿀벌",     "img": "images/꿀벌.png",     "emoji": "🐝" },
+    { "key": "butterfly",   "name": "나비",     "img": "images/나비.png",     "emoji": "🦋" },
+    { "key": "ladybug",     "name": "무당벌레", "img": "images/무당벌레.png", "emoji": "🐞" },
+    { "key": "ant",         "name": "개미",     "img": "images/개미.png",     "emoji": "🐜" },
+    { "key": "dragonfly",   "name": "잠자리",   "img": "images/잠자리.png",   "emoji": "🪰" },
+    { "key": "snail",       "name": "달팽이",   "img": "images/달팽이.png",   "emoji": "🐌" },
+    { "key": "caterpillar", "name": "애벌레",   "img": "images/애벌레.png",   "emoji": "🐛" },
+    { "key": "spider",      "name": "거미",     "img": "images/거미.png",     "emoji": "🕷️" },
+    { "key": "cicada",      "name": "매미",     "img": "images/매미.png",     "emoji": "🦗" },
+    { "key": "grasshopper", "name": "메뚜기",   "img": "images/메뚜기.png",   "emoji": "🦗" }
+  ]
+}
