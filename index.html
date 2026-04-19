@@ -29,13 +29,24 @@
     font-family: 'Gaegu', 'Jua', sans-serif;
   }
 
-  body {
+  /* 배경 레이어: 항상 화면 전체를 덮도록 fixed로 고정 */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
     background:
       radial-gradient(circle at 20% 20%, rgba(255, 227, 165, 0.6) 0%, transparent 50%),
       radial-gradient(circle at 80% 70%, rgba(255, 182, 193, 0.5) 0%, transparent 50%),
       linear-gradient(180deg, var(--bg-sky) 0%, var(--bg-sky-2) 100%);
+  }
+
+  body {
     color: var(--text);
     position: relative;
+    min-height: 100vh;
+    /* iOS Safari의 주소창 때문에 생기는 높이 이슈 대응 */
+    min-height: 100dvh;
   }
 
   .petals { position: fixed; inset: 0; pointer-events: none; z-index: 1; overflow: hidden; }
@@ -499,6 +510,22 @@
     .bug-img { width: 220px; height: 220px; }
     .bug-emoji-fallback { font-size: 170px; }
     .bug-list { grid-template-columns: repeat(2, 1fr); }
+
+    /* 모바일 상단 바: 세로로 쌓고, 별은 5개씩 2줄 grid로 */
+    .top-bar {
+      flex-direction: column;
+      gap: 8px;
+      padding: 10px 15px;
+    }
+    .progress { font-size: 1.2rem; }
+    .stars {
+      display: grid;
+      grid-template-columns: repeat(5, auto);
+      gap: 6px;
+      max-width: 100%;
+      justify-content: center;
+      font-size: 1.4rem;
+    }
   }
 </style>
 </head>
