@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>봄 곤충 친구들 퀴즈 🌸</title>
+<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Jua&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
+
+  :root {
+    --bg-sky: #FFF4D6;
+    --bg-sky-2: #FFE4E1;
+    --grass: #A8D88A;
+    --grass-dark: #7CB56A;
+    --pink-deep: #FF85A2;
+    --yellow: #FFE07A;
+    --blue: #9FD4F3;
+    --purple: #C8A8E9;
+    --text: #4A3C2C;
+    --text-light: #8A7968;
+    --correct: #7FD97F;
+    --wrong: #FFB3B3;
+    --shadow: 0 8px 0 rgba(74, 60, 44, 0.12);
+  }
+
+  html, body {
+    height: 100%;
+    overflow: hidden;
+    font-family: 'Gaegu', 'Jua', sans-serif;
+  }
+
+  body {
+    background:
+      radial-gradient(circle at 20% 20%, rgba(255, 227, 165, 0.6) 0%, transparent 50%),
+      radial-gradient(circle at 80% 70%, rgba(255, 182, 193, 0.5) 0%, transparent 50%),
+      linear-gradient(180deg, var(--bg-sky) 0%, var(--bg-sky-2) 100%);
+    color: var(--text);
+    position: relative;
+  }
+
+  .petals { position: fixed; inset: 0; pointer-events: none; z-index: 1; overflow: hidden; }
+  .petal {
+    position: absolute; width: 20px; height: 20px; top: -30px;
+    animation: fall linear infinite; opacity: 0.7;
+  }
+  @keyframes fall {
+    0% { transform: translateY(-30px) rotate(0deg); }
+    100% { transform: translateY(110vh) rotate(360deg); }
+  }
+
+  /* === 상단 플로팅 "곤충 추가" 버튼 === */
+  .add-bug-btn {
+    position: fixed;
+    top: 15px;
+    right: 15px;
+    z-index: 90;
+    background: var(--purple);
+    color: white;
+    border: none;
+    border-radius: 20px;
+    padding: 10px 18px;
+    font-family: 'Jua', sans-serif;
+    font-size: 1rem;
+    cursor: pointer;
+    box-shadow: var(--shadow);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: transform 0.15s;
+  }
+  .add-bug-btn:hover { transform: translateY(-2px); }
+  .add-bug-btn:active { transform: translateY(2px); }
+
+  .game-wrap {
+    position: relative; z-index: 10; height: 100vh;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 20px; max-width: 1000px; margin: 0 auto;
+  }
+
+  .btn {
+    font-family: 'Jua', sans-serif; border: none; cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    font-size: 1.5rem; color: var(--text);
+  }
+  .btn:active { transform: translateY(4px); box-shadow: 0 2px 0 rgba(74,60,44,0.12); }
+  .btn:hover { transform: translateY(-2px); }
+
+  .start-screen { text-align: center; animation: bounceIn 0.8s ease; }
+  @keyframes bounceIn {
+    0% { transform: scale(0.3); opacity: 0; }
+    60% { transform: scale(1.1); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  .title {
+    font-family: 'Jua', sans-serif; font-size: clamp(2.5rem, 6vw, 4.5rem);
+    color: var(--text); margin-bottom: 10px;
+    text-shadow: 3px 3px 0 var(--yellow); line-height: 1.2;
+  }
+  .subtitle { font-size: 1.5rem; color: var(--text-light); margin-bottom: 40px; }
+  .mascot { font-size: 8rem; margin: 20px 0; animation: sway 2s ease-in-out infinite; display: inline-block; }
+  @keyframes sway {
+    0%, 100% { transform: rotate(-5deg); }
+    50% { transform: rotate(5deg); }
+  }
+  .start-btn {
+    background: var(--pink-deep); color: white;
+    padding: 25px 60px; border-radius: 50px; font-size: 2.2rem;
+    box-shadow: var(--shadow); animation: pulse 1.5s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+  }
+
+  .bug-count-info {
+    margin-top: 20px;
+    font-size: 1.1rem;
+    color: var(--text-light);
+    background: white;
+    padding: 10px 20px;
+    border-radius: 15px;
+    box-shadow: var(--shadow);
+    display: inline-block;
+  }
+
+  .game-screen { width: 100%; display: none; flex-direction: column; align-items: center; gap: 15px; }
+  .game-screen.active { display: flex; }
+
+  .top-bar {
+    width: 100%; display: flex; justify-content: space-between; align-items: center;
+    background: white; padding: 12px 20px; border-radius: 20px; box-shadow: var(--shadow);
+  }
+  .progress { font-family: 'Jua', sans-serif; font-size: 1.3rem; color: var(--text); }
+  .stars { display: flex; gap: 5px; font-size: 1.5rem; flex-wrap: wrap; max-width: 60%; justify-content: flex-end; }
+  .star { filter: grayscale(1); opacity: 0.3; transition: all 0.3s; }
+  .star.earned { filter: none; opacity: 1; animation: starPop 0.5s ease; }
+  @keyframes starPop {
+    0% { transform: scale(0); }
+    60% { transform: scale(1.4); }
+    100% { transform: scale(1); }
+  }
+
+  .question-card {
+    background: white; border-radius: 30px; padding: 20px 30px;
+    box-shadow: var(--shadow); width: 100%; text-align: center; animation: slideUp 0.4s ease;
+  }
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .question-type {
+    display: inline-block; background: var(--yellow); padding: 5px 20px;
+    border-radius: 20px; font-size: 1.1rem; font-family: 'Jua', sans-serif; margin-bottom: 10px;
+  }
+  .question-text {
+    font-family: 'Jua', sans-serif; font-size: clamp(1.4rem, 3vw, 2rem);
+    color: var(--text); line-height: 1.4; margin-bottom: 5px;
+  }
+  .hint { font-size: 1.2rem; color: var(--text-light); font-style: italic; }
+
+  .visual-area {
+    display: flex; justify-content: center; align-items: center;
+    margin: 10px 0; min-height: 360px;
+  }
+  .bug-display {
+    width: 400px; height: 400px;
+    display: flex; align-items: center; justify-content: center;
+    animation: bugFloat 3s ease-in-out infinite;
+    background: transparent;
+  }
+  @keyframes bugFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+  .bug-img {
+    width: 360px; height: 360px;
+    object-fit: contain;
+    filter: drop-shadow(0 8px 20px rgba(0,0,0,0.15));
+  }
+  .bug-img.silhouette {
+    filter: brightness(0) saturate(100%) drop-shadow(0 8px 20px rgba(0,0,0,0.2));
+  }
+  .bug-emoji-fallback {
+    font-size: 280px;
+    line-height: 1;
+    filter: drop-shadow(0 8px 20px rgba(0,0,0,0.15));
+  }
+
+  .options {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; width: 100%;
+  }
+  .option-btn {
+    background: white; border: 4px solid var(--grass); border-radius: 25px;
+    padding: 20px 15px; box-shadow: var(--shadow);
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+    min-height: 220px; justify-content: center;
+  }
+  .option-btn .bug-img { width: 140px; height: 140px; }
+  .option-btn .bug-emoji-fallback { font-size: 110px; }
+  .option-btn .option-label { font-family: 'Jua', sans-serif; font-size: 1.5rem; }
+  .option-btn.correct {
+    background: var(--correct); border-color: #4CAF50; animation: correctShake 0.6s ease;
+  }
+  .option-btn.wrong {
+    background: var(--wrong); border-color: #E57373; animation: wrongShake 0.4s ease;
+  }
+  @keyframes correctShake {
+    0%, 100% { transform: scale(1); }
+    25% { transform: scale(1.15) rotate(-3deg); }
+    75% { transform: scale(1.15) rotate(3deg); }
+  }
+  @keyframes wrongShake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-10px); }
+    75% { transform: translateX(10px); }
+  }
+
+  .sound-btn {
+    background: var(--blue); color: var(--text);
+    padding: 30px 50px; border-radius: 30px; font-size: 2rem;
+    box-shadow: var(--shadow); display: flex; align-items: center; gap: 15px; margin: 15px auto;
+  }
+  .sound-btn:active { background: #7EBCE0; }
+  .sound-icon { font-size: 2.5rem; animation: wave 1s ease-in-out infinite; }
+  @keyframes wave {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+  }
+
+  .feedback {
+    position: fixed; inset: 0; display: none;
+    align-items: center; justify-content: center;
+    z-index: 100; pointer-events: none;
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+  .feedback.show { display: flex; animation: fadeIn 0.3s ease; }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  .feedback-content {
+    font-family: 'Jua', sans-serif;
+    font-size: clamp(2.5rem, 7vw, 5rem);
+    animation: feedbackPop 1s ease;
+    text-align: center;
+    background: white;
+    border-radius: 40px;
+    padding: 40px 60px;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+    border: 5px solid currentColor;
+  }
+  @keyframes feedbackPop {
+    0% { transform: scale(0) rotate(-20deg); opacity: 0; }
+    50% { transform: scale(1.2) rotate(5deg); opacity: 1; }
+    100% { transform: scale(1) rotate(0); opacity: 1; }
+  }
+
+  .done-screen {
+    display: none; flex-direction: column; align-items: center; text-align: center;
+    animation: bounceIn 0.8s ease;
+  }
+  .done-screen.active { display: flex; }
+  .trophy { font-size: 10rem; animation: sway 2s ease-in-out infinite; }
+  .done-title {
+    font-family: 'Jua', sans-serif; font-size: 3.5rem;
+    margin: 20px 0 10px; color: var(--pink-deep);
+  }
+  .done-score { font-size: 2rem; margin-bottom: 30px; }
+  .restart-btn {
+    background: var(--grass-dark); color: white;
+    padding: 20px 50px; border-radius: 50px; font-size: 1.8rem; box-shadow: var(--shadow);
+  }
+
+  /* === 곤충 추가 모달 === */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+  .modal-overlay.show { display: flex; animation: fadeIn 0.3s ease; }
+  .modal {
+    background: white;
+    border-radius: 30px;
+    padding: 30px;
+    max-width: 500px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    animation: bounceIn 0.4s ease;
+  }
+  .modal h2 {
+    font-family: 'Jua', sans-serif;
+    font-size: 1.8rem;
+    color: var(--text);
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  .modal-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #f0f0f0;
+  }
+  .modal-tab {
+    flex: 1;
+    padding: 10px;
+    background: none;
+    border: none;
+    font-family: 'Jua', sans-serif;
+    font-size: 1rem;
+    cursor: pointer;
+    color: var(--text-light);
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s;
+  }
+  .modal-tab.active {
+    color: var(--pink-deep);
+    border-bottom-color: var(--pink-deep);
+  }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  .form-group {
+    margin-bottom: 15px;
+  }
+  .form-group label {
+    display: block;
+    font-family: 'Jua', sans-serif;
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+    color: var(--text);
+  }
+  .form-group input[type="text"] {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    font-family: 'Gaegu', sans-serif;
+    font-size: 1.1rem;
+    transition: border-color 0.2s;
+  }
+  .form-group input[type="text"]:focus {
+    outline: none;
+    border-color: var(--pink-deep);
+  }
+  .file-input-wrap {
+    position: relative;
+    border: 2px dashed #ccc;
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: #fafafa;
+  }
+  .file-input-wrap:hover {
+    border-color: var(--pink-deep);
+    background: #fff5f8;
+  }
+  .file-input-wrap input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+  .preview-img {
+    max-width: 120px;
+    max-height: 120px;
+    margin: 10px auto;
+    border-radius: 10px;
+    display: none;
+  }
+  .preview-img.show { display: block; }
+
+  .modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+  }
+  .modal-btn {
+    flex: 1;
+    padding: 14px;
+    border-radius: 15px;
+    font-family: 'Jua', sans-serif;
+    font-size: 1.1rem;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.15s;
+  }
+  .modal-btn:hover { transform: translateY(-2px); }
+  .modal-btn.primary {
+    background: var(--pink-deep);
+    color: white;
+  }
+  .modal-btn.secondary {
+    background: #f0f0f0;
+    color: var(--text);
+  }
+
+  /* 현재 곤충 목록 */
+  .bug-list {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    max-height: 300px;
+    overflow-y: auto;
+    padding: 5px;
+  }
+  .bug-list-item {
+    background: #f9f9f9;
+    border-radius: 12px;
+    padding: 10px;
+    text-align: center;
+    position: relative;
+  }
+  .bug-list-item img {
+    width: 60px;
+    height: 60px;
+    object-fit: contain;
+  }
+  .bug-list-item .bug-emoji-fallback {
+    font-size: 50px;
+  }
+  .bug-list-item .name {
+    font-family: 'Jua', sans-serif;
+    font-size: 0.9rem;
+    margin-top: 5px;
+    color: var(--text);
+  }
+  .bug-list-item .delete-btn {
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #ff6b6b;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 0.8rem;
+    line-height: 1;
+    display: none;
+  }
+  .bug-list-item.custom .delete-btn { display: block; }
+  .bug-list-item .badge {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    background: var(--yellow);
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    border-radius: 8px;
+    font-family: 'Jua', sans-serif;
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(74, 60, 44, 0.95);
+    color: white;
+    padding: 14px 28px;
+    border-radius: 25px;
+    font-family: 'Jua', sans-serif;
+    font-size: 1.1rem;
+    z-index: 300;
+    display: none;
+    animation: toastSlide 0.3s ease;
+  }
+  .toast.show { display: block; }
+  @keyframes toastSlide {
+    from { opacity: 0; transform: translate(-50%, 20px); }
+    to { opacity: 1; transform: translate(-50%, 0); }
+  }
+
+  @media (max-width: 600px) {
+    .options { grid-template-columns: 1fr 1fr; }
+    .option-btn { min-height: 180px; padding: 15px 10px; }
+    .option-btn .bug-img { width: 110px; height: 110px; }
+    .option-btn .bug-emoji-fallback { font-size: 85px; }
+    .option-btn .option-label { font-size: 1.3rem; }
+    .title { font-size: 2.5rem; }
+    .mascot { font-size: 6rem; }
+    .bug-display { width: 300px; height: 300px; }
+    .bug-img { width: 270px; height: 270px; }
+    .bug-emoji-fallback { font-size: 210px; }
+    .bug-list { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<div class="petals" id="petals"></div>
+
+<!-- 상단 플로팅 곤충 추가 버튼 -->
+<button class="add-bug-btn" onclick="openModal()">
+  ➕ 곤충 관리
+</button>
+
+<div class="game-wrap">
+
+  <div class="start-screen" id="startScreen">
+    <div class="mascot">🐝</div>
+    <h1 class="title">봄 곤충 친구들<br>퀴즈 놀이</h1>
+    <p class="subtitle">우리 같이 봄 친구들을 만나볼까요?</p>
+    <button class="btn start-btn" onclick="startGame()">시작하기 ✨</button>
+    <div class="bug-count-info">
+      🐛 현재 <span id="bugCountDisplay">10</span>종류의 곤충이 있어요!
+    </div>
+  </div>
+
+  <div class="game-screen" id="gameScreen">
+    <div class="top-bar">
+      <div class="progress">문제 <span id="qNum">1</span> / <span id="qTotal">10</span></div>
+      <div class="stars" id="stars"></div>
+    </div>
+    <div class="question-card" id="questionCard"></div>
+  </div>
+
+  <div class="done-screen" id="doneScreen">
+    <div class="trophy">🏆</div>
+    <h1 class="done-title">참 잘했어요!</h1>
+    <p class="done-score">별 <span id="finalScore">0</span>개를 모았어요! ⭐</p>
+    <button class="btn restart-btn" onclick="restartGame()">다시 하기 🔄</button>
+  </div>
+
+</div>
+
+<div class="feedback" id="feedback">
+  <div class="feedback-content" id="feedbackContent"></div>
+</div>
+
+<!-- 곤충 관리 모달 -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h2>🐛 곤충 관리</h2>
+    <div class="modal-tabs">
+      <button class="modal-tab active" onclick="switchTab('add')">➕ 곤충 추가</button>
+      <button class="modal-tab" onclick="switchTab('list')">📋 전체 목록</button>
+    </div>
+
+    <!-- 추가 탭 -->
+    <div class="tab-content active" id="tabAdd">
+      <div class="form-group">
+        <label>🏷️ 곤충 이름</label>
+        <input type="text" id="bugName" placeholder="예: 사슴벌레" maxlength="10">
+      </div>
+      <div class="form-group">
+        <label>📁 images 폴더에서 사진 선택</label>
+        <div class="file-input-wrap">
+          <input type="file" id="bugImage" accept="image/*" onchange="previewImage(event)">
+          <div id="fileInputText">🖼️ 클릭해서 images 폴더의 사진을 선택하세요</div>
+          <img class="preview-img" id="previewImg" alt="미리보기">
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="modal-btn secondary" onclick="closeModal()">취소</button>
+        <button class="modal-btn primary" onclick="addBug()">추가하기 ✨</button>
+      </div>
+      <p style="font-size: 0.85rem; color: var(--text-light); margin-top: 15px; text-align: center; line-height: 1.5;">
+        💡 먼저 <code>images</code> 폴더에 사진을 넣어주세요!<br>
+        그런 다음 "파일 선택"에서 해당 사진을 고르면 퀴즈에 추가돼요.
+      </p>
+    </div>
+
+    <!-- 목록 탭 -->
+    <div class="tab-content" id="tabList">
+      <div class="bug-list" id="bugListContainer"></div>
+      <div class="modal-actions">
+        <button class="modal-btn primary" onclick="closeModal()">닫기</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================
+// 기본 곤충 정보
+// ============================================
+const DEFAULT_BUGS = {
+  bee:         { name: '꿀벌',     img: 'images/꿀벌.png',     emoji: '🐝' },
+  butterfly:   { name: '나비',     img: 'images/나비.png',     emoji: '🦋' },
+  ladybug:     { name: '무당벌레', img: 'images/무당벌레.png', emoji: '🐞' },
+  ant:         { name: '개미',     img: 'images/개미.png',     emoji: '🐜' },
+  dragonfly:   { name: '잠자리',   img: 'images/잠자리.png',   emoji: '🪰' },
+  snail:       { name: '달팽이',   img: 'images/달팽이.png',   emoji: '🐌' },
+  caterpillar: { name: '애벌레',   img: 'images/애벌레.png',   emoji: '🐛' },
+  spider:      { name: '거미',     img: 'images/거미.png',     emoji: '🕷️' },
+  cicada:      { name: '매미',     img: 'images/매미.png',     emoji: '🦗' },
+  grasshopper: { name: '메뚜기',   img: 'images/메뚜기.png',   emoji: '🦗' },
+};
+
+// 힌트와 설명 데이터
+const BUG_HINTS = {
+  bee:         { feature: '꽃에서 꿀을 모으는 친구예요.', hint: '노란색과 검은색 줄무늬가 있어요' },
+  butterfly:   { feature: '알록달록 예쁜 날개로 꽃밭을 날아다녀요.', hint: '훨훨 나풀나풀' },
+  ladybug:     { feature: '빨간 옷에 까만 점이 있는 친구예요.', hint: '작고 동그란 모양이에요' },
+  ant:         { feature: '다리가 많고 줄지어서 함께 다녀요.', hint: '작지만 힘이 아주 세요' },
+  dragonfly:   { feature: '투명한 날개가 네 장이에요.', hint: '연못 근처에서 볼 수 있어요' },
+  snail:       { feature: '등에 집을 지고 느릿느릿 다녀요.', hint: '비 오는 날 자주 볼 수 있어요' },
+  caterpillar: { feature: '초록색 몸에 다리가 많고, 커서 나비가 돼요!', hint: '잎사귀를 냠냠 먹어요' },
+  spider:      { feature: '다리가 여덟 개 있고 거미줄을 만들어요.', hint: '구석에 집을 지어요' },
+  cicada:      { feature: '여름에 맴맴 소리내며 우는 친구예요.', hint: '나무에 붙어 있어요' },
+  grasshopper: { feature: '뒷다리로 폴짝폴짝 뛰어다녀요.', hint: '풀밭에서 볼 수 있어요' },
+};
+
+// ============================================
+// 로컬스토리지에서 커스텀 곤충 로드/저장
+// ============================================
+const STORAGE_KEY = 'customBugs_v1';
+
+function loadCustomBugs() {
+  try {
+    const data = localStorage.getItem(STORAGE_KEY);
+    return data ? JSON.parse(data) : {};
+  } catch (e) {
+    return {};
+  }
+}
+
+function saveCustomBugs(bugs) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(bugs));
+  } catch (e) {
+    showToast('⚠️ 저장 실패: 용량 초과');
+  }
+}
+
+let customBugs = loadCustomBugs();
+
+// 전체 곤충 목록 (기본 + 커스텀 통합)
+function getAllBugs() {
+  return { ...DEFAULT_BUGS, ...customBugs };
+}
+
+// ============================================
+// 이미지 렌더링
+// ============================================
+function renderBugImage(bugKey, options = {}) {
+  const bugs = getAllBugs();
+  const bug = bugs[bugKey];
+  if (!bug) return '';
+  const silhouetteClass = options.silhouette ? 'silhouette' : '';
+  const size = options.size || '';
+  // 한글/공백 등 특수문자가 포함된 파일명을 URL 안전하게 인코딩
+  // (Data URL은 그대로 사용)
+  const imgSrc = bug.img.startsWith('data:') ? bug.img : encodeURI(bug.img);
+  return `<img class="bug-img ${silhouetteClass} ${size}" src="${imgSrc}" alt="${bug.name}"
+    onerror="this.onerror=null; this.outerHTML='<span class=\\'bug-emoji-fallback\\'>${bug.emoji || '🐛'}</span>';">`;
+}
+
+// ============================================
+// 퀴즈 무작위 생성
+// ============================================
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function generateQuizzes() {
+  const allBugs = getAllBugs();
+  const bugKeys = Object.keys(allBugs);
+
+  if (bugKeys.length < 4) return []; // 최소 4개 필요
+
+  const types = ['image', 'silhouette', 'feature', 'sound'];
+  const quizCount = Math.min(10, bugKeys.length);
+  const selectedBugs = shuffle(bugKeys).slice(0, quizCount);
+
+  return selectedBugs.map((bugKey, idx) => {
+    const bug = allBugs[bugKey];
+    const type = types[idx % types.length]; // 4가지 유형 순환
+    const hintData = BUG_HINTS[bugKey] || {
+      feature: `${bug.name}은(는) 어떤 곤충일까요?`,
+      hint: bug.name + ' 친구예요'
+    };
+
+    // 오답 3개 랜덤 선택
+    const wrongOptions = shuffle(bugKeys.filter(k => k !== bugKey)).slice(0, 3);
+    const options = shuffle([bugKey, ...wrongOptions]);
+
+    const quiz = {
+      type,
+      answer: bugKey,
+      bug: bugKey,
+      options,
+      hint: hintData.hint,
+      hintSpoken: hintData.hint.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, '').trim()
+    };
+
+    if (type === 'image') {
+      quiz.typeLabel = '🔍 무슨 곤충일까요?';
+      quiz.question = '이 친구의 이름은 무엇일까요?';
+    } else if (type === 'silhouette') {
+      quiz.typeLabel = '👥 그림자 퀴즈!';
+      quiz.question = '이 그림자의 주인공은 누구일까요?';
+    } else if (type === 'feature') {
+      quiz.typeLabel = '💡 이 친구는 누구?';
+      quiz.question = hintData.feature;
+    } else if (type === 'sound') {
+      quiz.typeLabel = '👂 힌트를 들어보세요!';
+      quiz.question = hintData.feature;
+      quiz.questionSpoken = hintData.feature;
+      quiz.sound = hintData.hint;
+    }
+
+    return quiz;
+  });
+}
+
+// ============================================
+// 게임 상태
+// ============================================
+let QUIZZES = [];
+let currentQ = 0;
+let score = 0;
+let answered = false;
+
+function createPetals() {
+  const container = document.getElementById('petals');
+  const emojis = ['🌸', '🌺', '🌼', '🌷', '🍃'];
+  for (let i = 0; i < 15; i++) {
+    const petal = document.createElement('div');
+    petal.className = 'petal';
+    petal.style.left = Math.random() * 100 + '%';
+    petal.style.animationDuration = (Math.random() * 10 + 10) + 's';
+    petal.style.animationDelay = Math.random() * 10 + 's';
+    petal.style.fontSize = (Math.random() * 15 + 15) + 'px';
+    petal.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+    container.appendChild(petal);
+  }
+}
+createPetals();
+
+// ============================================
+// 음성 (기본 음성 사용)
+// ============================================
+function cleanTextForSpeech(text) {
+  return text
+    .replace(/[\u{1F300}-\u{1FAFF}]/gu, '')
+    .replace(/[\u{2600}-\u{27BF}]/gu, '')
+    .replace(/~/g, '')
+    .replace(/[""'']/g, '')
+    .replace(/[♪♫♬]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function speak(text, options = {}) {
+  if (!('speechSynthesis' in window)) return;
+  window.speechSynthesis.cancel();
+  const cleanText = cleanTextForSpeech(text);
+  if (!cleanText) return;
+  const utter = new SpeechSynthesisUtterance(cleanText);
+  utter.lang = 'ko-KR';
+  utter.pitch = options.pitch || 1.7;
+  utter.rate = options.rate || 1.05;
+  utter.volume = 1.0;
+  window.speechSynthesis.speak(utter);
+}
+
+// ============================================
+// 게임 로직
+// ============================================
+function updateBugCount() {
+  document.getElementById('bugCountDisplay').textContent = Object.keys(getAllBugs()).length;
+}
+
+function startGame() {
+  const allBugs = getAllBugs();
+  if (Object.keys(allBugs).length < 4) {
+    showToast('⚠️ 최소 4종류의 곤충이 필요해요!');
+    return;
+  }
+
+  // 매번 새로운 무작위 퀴즈 생성!
+  QUIZZES = generateQuizzes();
+
+  document.getElementById('startScreen').style.display = 'none';
+  document.getElementById('gameScreen').classList.add('active');
+  document.getElementById('qTotal').textContent = QUIZZES.length;
+  const starsEl = document.getElementById('stars');
+  starsEl.innerHTML = '';
+  for (let i = 0; i < QUIZZES.length; i++) {
+    starsEl.innerHTML += '<span class="star">⭐</span>';
+  }
+  currentQ = 0;
+  score = 0;
+  renderQuestion();
+}
+
+function renderQuestion() {
+  answered = false;
+  const q = QUIZZES[currentQ];
+  document.getElementById('qNum').textContent = currentQ + 1;
+  const card = document.getElementById('questionCard');
+
+  let html = `<div class="question-type">${q.typeLabel}</div>`;
+  html += `<p class="question-text">${q.question}</p>`;
+
+  if (q.type === 'image') {
+    html += `<div class="visual-area"><div class="bug-display">${renderBugImage(q.bug)}</div></div>`;
+  } else if (q.type === 'silhouette') {
+    html += `<div class="visual-area"><div class="bug-display">${renderBugImage(q.bug, {silhouette: true})}</div></div>`;
+  } else if (q.type === 'sound') {
+    html += `<button class="btn sound-btn" onclick="speak('${q.sound}', {pitch: 1.9, rate: 1.2})">
+      <span class="sound-icon">🔊</span> 힌트 듣기
+    </button>`;
+  }
+
+  if (q.hint && q.type !== 'sound') html += `<p class="hint">힌트: ${q.hint}</p>`;
+
+  const allBugs = getAllBugs();
+  const hideLabels = q.type === 'feature'; // '이 친구는 누구?' 문제는 이름 숨김
+  html += `<div class="options">`;
+  q.options.forEach(opt => {
+    html += `<button class="option-btn" data-option="${opt}" onclick="selectAnswer('${opt}')">
+      ${renderBugImage(opt)}
+      ${hideLabels ? '' : `<span class="option-label">${allBugs[opt].name}</span>`}
+    </button>`;
+  });
+  html += `</div>`;
+
+  card.innerHTML = html;
+
+  setTimeout(() => {
+    const speakText = q.questionSpoken || q.question;
+    speak(speakText);
+  }, 400);
+}
+
+function selectAnswer(selected) {
+  if (answered) return;
+  answered = true;
+
+  const q = QUIZZES[currentQ];
+  const buttons = document.querySelectorAll('.option-btn');
+
+  buttons.forEach(btn => {
+    const opt = btn.dataset.option;
+    if (opt === q.answer) btn.classList.add('correct');
+    if (opt === selected && opt !== q.answer) btn.classList.add('wrong');
+  });
+
+  const allBugs = getAllBugs();
+  if (selected === q.answer) {
+    score++;
+    const stars = document.querySelectorAll('.star');
+    if (stars[currentQ]) stars[currentQ].classList.add('earned');
+    showFeedback('참 잘했어요!', true);
+    speak('참 잘했어요!', {pitch: 1.9, rate: 1.1});
+  } else {
+    showFeedback('괜찮아요! 다시 해봐요', false);
+    speak(`정답은 ${allBugs[q.answer].name}이에요`, {pitch: 1.7});
+  }
+
+  setTimeout(nextQuestion, 2200);
+}
+
+function showFeedback(text, isCorrect) {
+  const fb = document.getElementById('feedback');
+  const content = document.getElementById('feedbackContent');
+  content.textContent = text;
+  content.style.color = isCorrect ? '#4CAF50' : '#FF85A2';
+  fb.classList.add('show');
+  setTimeout(() => fb.classList.remove('show'), 1800);
+}
+
+function nextQuestion() {
+  currentQ++;
+  if (currentQ >= QUIZZES.length) endGame();
+  else renderQuestion();
+}
+
+function endGame() {
+  document.getElementById('gameScreen').classList.remove('active');
+  const done = document.getElementById('doneScreen');
+  done.classList.add('active');
+  done.style.display = 'flex';
+  document.getElementById('finalScore').textContent = score;
+  speak(`참 잘했어요! 별 ${score}개를 모았어요!`, {pitch: 1.9, rate: 1.1});
+}
+
+function restartGame() {
+  document.getElementById('doneScreen').classList.remove('active');
+  document.getElementById('doneScreen').style.display = 'none';
+  document.getElementById('startScreen').style.display = 'block';
+  updateBugCount();
+}
+
+// ============================================
+// 곤충 관리 모달
+// ============================================
+let pendingFileName = null;
+
+function openModal() {
+  document.getElementById('modal').classList.add('show');
+  renderBugList();
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('show');
+  document.getElementById('bugName').value = '';
+  document.getElementById('bugImage').value = '';
+  document.getElementById('previewImg').classList.remove('show');
+  document.getElementById('fileInputText').textContent = '🖼️ 클릭해서 images 폴더의 사진을 선택하세요';
+  pendingFileName = null;
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
+  if (tab === 'list') renderBugList();
+}
+
+function previewImage(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  // 파일명만 저장 (images/ 폴더의 파일을 참조)
+  pendingFileName = file.name;
+
+  // 미리보기용으로만 Data URL 사용
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const preview = document.getElementById('previewImg');
+    preview.src = e.target.result;
+    preview.classList.add('show');
+    document.getElementById('fileInputText').textContent = `✅ ${file.name}`;
+  };
+  reader.readAsDataURL(file);
+}
+
+function addBug() {
+  const name = document.getElementById('bugName').value.trim();
+
+  if (!name) {
+    showToast('⚠️ 곤충 이름을 입력해주세요');
+    return;
+  }
+  if (!pendingFileName) {
+    showToast('⚠️ 사진을 선택해주세요');
+    return;
+  }
+
+  // 중복 검사
+  const allBugs = getAllBugs();
+  for (const key in allBugs) {
+    if (allBugs[key].name === name) {
+      showToast('⚠️ 같은 이름의 곤충이 이미 있어요');
+      return;
+    }
+  }
+
+  const key = 'custom_' + Date.now();
+
+  // 커스텀 곤충 저장: images/파일명 경로로 저장
+  customBugs[key] = {
+    name: name,
+    img: 'images/' + pendingFileName,
+    emoji: '🐛',
+    isCustom: true
+  };
+  saveCustomBugs(customBugs);
+
+  // 힌트 정보 기본값
+  BUG_HINTS[key] = {
+    feature: `${name}은(는) 어떤 곤충일까요?`,
+    hint: name + ' 친구예요'
+  };
+
+  showToast(`✨ '${name}'이(가) 추가되었어요!`);
+  updateBugCount();
+  closeModal();
+}
+
+function deleteBug(key) {
+  const bug = customBugs[key];
+  if (!bug) return;
+  if (confirm(`'${bug.name}'을(를) 삭제할까요?`)) {
+    delete customBugs[key];
+    saveCustomBugs(customBugs);
+    delete BUG_HINTS[key];
+    renderBugList();
+    updateBugCount();
+    showToast('🗑️ 삭제되었어요');
+  }
+}
+
+function renderBugList() {
+  const container = document.getElementById('bugListContainer');
+  const allBugs = getAllBugs();
+  let html = '';
+  for (const key in allBugs) {
+    const bug = allBugs[key];
+    const isCustom = bug.isCustom;
+    const imgSrc = bug.img.startsWith('data:') ? bug.img : encodeURI(bug.img);
+    html += `<div class="bug-list-item ${isCustom ? 'custom' : ''}">
+      ${isCustom ? '<span class="badge">내가 추가</span>' : ''}
+      <button class="delete-btn" onclick="deleteBug('${key}')" title="삭제">✕</button>
+      <img src="${imgSrc}" alt="${bug.name}"
+        onerror="this.onerror=null; this.outerHTML='<span class=\\'bug-emoji-fallback\\'>${bug.emoji || '🐛'}</span>';">
+      <div class="name">${bug.name}</div>
+    </div>`;
+  }
+  container.innerHTML = html;
+}
+
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2500);
+}
+
+// 초기화
+updateBugCount();
+</script>
+
+</body>
+</html>
