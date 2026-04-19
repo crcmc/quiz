@@ -102,13 +102,59 @@
     60% { transform: scale(1.1); }
     100% { transform: scale(1); opacity: 1; }
   }
+
+  /* 선생님 소개 섹션 */
+  .teacher-intro {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 20px;
+    animation: floatUp 0.8s ease 0.2s both;
+  }
+  @keyframes floatUp {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .teacher-photo {
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 5px solid white;
+    box-shadow: 0 6px 20px rgba(255, 133, 162, 0.35), 0 0 0 3px var(--pink-deep);
+    background: white;
+    animation: teacherBob 3s ease-in-out infinite;
+  }
+  @keyframes teacherBob {
+    0%, 100% { transform: translateY(0) rotate(-2deg); }
+    50% { transform: translateY(-5px) rotate(2deg); }
+  }
+  .teacher-name {
+    margin-top: 12px;
+    font-family: 'Jua', sans-serif;
+    font-size: 1.3rem;
+    color: var(--text);
+    background: white;
+    padding: 6px 18px;
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+    position: relative;
+  }
+  .teacher-name::before {
+    content: '🌸';
+    margin-right: 6px;
+  }
+  .teacher-name::after {
+    content: '🌸';
+    margin-left: 6px;
+  }
   .title {
     font-family: 'Jua', sans-serif; font-size: clamp(2.5rem, 6vw, 4.5rem);
     color: var(--text); margin-bottom: 10px;
     text-shadow: 3px 3px 0 var(--yellow); line-height: 1.2;
   }
   .subtitle { font-size: 1.5rem; color: var(--text-light); margin-bottom: 40px; }
-  .mascot { font-size: 8rem; margin: 20px 0; animation: sway 2s ease-in-out infinite; display: inline-block; }
+  .mascot { font-size: 6.5rem; margin: 10px 0; animation: sway 2s ease-in-out infinite; display: inline-block; }
   @keyframes sway {
     0%, 100% { transform: rotate(-5deg); }
     50% { transform: rotate(5deg); }
@@ -505,7 +551,9 @@
     .option-btn .bug-emoji-fallback { font-size: 75px; }
     .option-btn .option-label { font-size: 1.2rem; }
     .title { font-size: 2.5rem; }
-    .mascot { font-size: 6rem; }
+    .mascot { font-size: 5rem; }
+    .teacher-photo { width: 90px; height: 90px; border-width: 4px; }
+    .teacher-name { font-size: 1.1rem; padding: 5px 15px; }
     .bug-display { width: 240px; height: 240px; }
     .bug-img { width: 220px; height: 220px; }
     .bug-emoji-fallback { font-size: 170px; }
@@ -536,6 +584,11 @@
 <div class="game-wrap">
 
   <div class="start-screen" id="startScreen">
+    <div class="teacher-intro">
+      <img class="teacher-photo" src="images/teacher.png" alt="신은경 선생님"
+        onerror="this.onerror=null; this.style.display='none';">
+      <div class="teacher-name">신은경 선생님과 함께하는</div>
+    </div>
     <div class="mascot">🐝</div>
     <h1 class="title">봄 곤충 친구들<br>퀴즈 놀이</h1>
     <p class="subtitle">우리 같이 봄 친구들을 만나볼까요?</p>
